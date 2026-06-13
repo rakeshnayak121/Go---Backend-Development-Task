@@ -99,7 +99,7 @@ go mod tidy
 Run Application:
 
 ```bash
-go run .
+go run ./cmd/server
 ```
 
 ---
