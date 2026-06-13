@@ -34,22 +34,18 @@ A RESTful API built using Go, Fiber, PostgreSQL, SQLC, Validator, and Zap Logger
 
 ```text
 .
-├── config
-├── database
-├── db
-│   ├── migrations
-│   ├── query
-│   └── sqlc
-├── handlers
-├── logger
-├── models
-├── routes
-├── tests
-├── utils
-├── .env
-├── go.mod
-├── go.sum
-└── main.go
+/cmd/server/main.go
+/config/
+/db/migrations/
+/db/sqlc/<generated>
+/internal/
+├── handler/
+├── repository/
+├── service/
+├── routes/
+├── middleware/
+├── models/
+└── logger/
 ```
 
 ---
