@@ -7,8 +7,8 @@ import (
 
 	"user-api/database"
 	"user-api/db/sqlc"
-	"user-api/logger"
-	"user-api/models"
+	"user-api/internal/logger"
+	"user-api/internal/models"
 	"user-api/utils"
 
 	"github.com/gofiber/fiber/v2"

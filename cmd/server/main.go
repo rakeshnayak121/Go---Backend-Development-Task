@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"user-api/database"
-	"user-api/logger"
-	"user-api/routes"
+	"user-api/internal/logger"
+	"user-api/internal/routes"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
