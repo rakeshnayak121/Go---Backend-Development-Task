@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -12,33 +11,31 @@ import (
 	"user-api/models"
 	"user-api/utils"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
 
-func CreateUser(c *gin.Context) {
+func CreateUser(c *fiber.Ctx) error {
 
 	var user models.User
 
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
 	}
+
 	if err := utils.Validate.Struct(user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
 	}
 
 	dob, err := time.Parse("2006-01-02", user.DOB)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid date format. Use YYYY-MM-DD",
 		})
-		return
 	}
 
 	createdUser, err := database.Queries.CreateUser(
@@ -50,10 +47,9 @@ func CreateUser(c *gin.Context) {
 	)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user",
 		})
-		return
 	}
 
 	logger.Log.Info(
@@ -62,21 +58,20 @@ func CreateUser(c *gin.Context) {
 		zap.String("name", createdUser.Name),
 	)
 
-	c.JSON(http.StatusCreated, gin.H{
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User Created Successfully",
 		"id":      createdUser.ID,
 	})
 
 }
 
-func GetUserByID(c *gin.Context) {
+func GetUserByID(c *fiber.Ctx) error {
 
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
 		})
-		return
 	}
 
 	dbUser, err := database.Queries.GetUserByID(
@@ -85,10 +80,9 @@ func GetUserByID(c *gin.Context) {
 	)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "User Not Found",
 		})
-		return
 	}
 
 	user := models.User{
@@ -101,15 +95,14 @@ func GetUserByID(c *gin.Context) {
 	if dbUser.CreatedAt.Valid {
 		user.CreatedAt = dbUser.CreatedAt.Time
 	}
-
-	c.JSON(http.StatusOK, user)
+	return c.JSON(user)
 
 }
 
-func GetAllUsers(c *gin.Context) {
+func GetAllUsers(c *fiber.Ctx) error {
 
-	page := c.DefaultQuery("page", "1")
-	limit := c.DefaultQuery("limit", "5")
+	page := c.Query("page", "1")
+	limit := c.Query("limit", "5")
 
 	pageNum, _ := strconv.Atoi(page)
 	limitNum, _ := strconv.Atoi(limit)
@@ -127,17 +120,15 @@ func GetAllUsers(c *gin.Context) {
 	)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch users",
 		})
-		return
 	}
 
 	start := (pageNum - 1) * limitNum
 
 	if start >= len(allUsers) {
-		c.JSON(http.StatusOK, []models.User{})
-		return
+		return c.JSON([]models.User{})
 	}
 
 	end := start + limitNum
@@ -163,41 +154,38 @@ func GetAllUsers(c *gin.Context) {
 		users = append(users, user)
 	}
 
-	c.JSON(http.StatusOK, users)
+	return c.JSON(users)
 
 }
 
-func UpdateUser(c *gin.Context) {
+func UpdateUser(c *fiber.Ctx) error {
 
 	var user models.User
 
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
-	}
-	if err := utils.Validate.Struct(user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
 	}
 
-	id, err := strconv.Atoi(c.Param("id"))
+	if err := utils.Validate.Struct(user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
 		})
-		return
 	}
 
 	dob, err := time.Parse("2006-01-02", user.DOB)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid date format. Use YYYY-MM-DD",
 		})
-		return
 	}
 
 	err = database.Queries.UpdateUser(
@@ -210,10 +198,9 @@ func UpdateUser(c *gin.Context) {
 	)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update user",
 		})
-		return
 	}
 
 	logger.Log.Info(
@@ -222,20 +209,19 @@ func UpdateUser(c *gin.Context) {
 		zap.String("name", user.Name),
 	)
 
-	c.JSON(http.StatusOK, gin.H{
+	return c.JSON(fiber.Map{
 		"message": "User Updated Successfully",
 	})
 
 }
 
-func DeleteUser(c *gin.Context) {
+func DeleteUser(c *fiber.Ctx) error {
 
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
 		})
-		return
 	}
 
 	err = database.Queries.DeleteUser(
@@ -244,10 +230,9 @@ func DeleteUser(c *gin.Context) {
 	)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete user",
 		})
-		return
 	}
 
 	logger.Log.Info(
@@ -255,6 +240,6 @@ func DeleteUser(c *gin.Context) {
 		zap.Int("id", id),
 	)
 
-	c.Status(http.StatusNoContent)
+	return c.SendStatus(fiber.StatusNoContent)
 
 }

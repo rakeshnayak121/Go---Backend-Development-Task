@@ -3,20 +3,21 @@ package routes
 import (
 	"user-api/handlers"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func SetupRoutes(router *gin.Engine) {
+func SetupRoutes(app *fiber.App) {
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
 			"status": "ok",
 		})
 	})
 
-	router.POST("/users", handlers.CreateUser)
-	router.GET("/users", handlers.GetAllUsers)
-	router.GET("/users/:id", handlers.GetUserByID)
-	router.PUT("/users/:id", handlers.UpdateUser)
-	router.DELETE("/users/:id", handlers.DeleteUser)
+	app.Post("/users", handlers.CreateUser)
+	app.Get("/users", handlers.GetAllUsers)
+	app.Get("/users/:id", handlers.GetUserByID)
+	app.Put("/users/:id", handlers.UpdateUser)
+	app.Delete("/users/:id", handlers.DeleteUser)
+
 }

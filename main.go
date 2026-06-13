@@ -2,11 +2,12 @@ package main
 
 import (
 	"log"
+
 	"user-api/database"
 	"user-api/logger"
 	"user-api/routes"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -20,10 +21,12 @@ func main() {
 	database.ConnectDB()
 	logger.InitLogger()
 
-	router := gin.Default()
+	app := fiber.New()
 
-	routes.SetupRoutes(router)
+	routes.SetupRoutes(app)
+
 	logger.Log.Info("Server starting on port 8080")
 
-	router.Run(":8080")
+	log.Fatal(app.Listen(":8080"))
+
 }
